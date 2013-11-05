@@ -2,7 +2,7 @@ NAME
     Path::Naive - Yet another abstract, Unix-like path manipulation routines
 
 VERSION
-    version 0.01
+    version 0.02
 
 SYNOPSIS
      use Path::Naive qw(
@@ -88,8 +88,8 @@ FUNCTIONS
   normalize_path($path) => STR
   is_abs_path($path) => BOOL
   is_rel_path($path) => BOOL
-  concat_path($path1, $path2) => STR
-  concat_path_n($path1, $path2) => STR
+  concat_path($path1, $path2, ...) => STR
+  concat_path_n($path1, $path2, ...) => STR
   abs_path($path) => STR
 SEE ALSO
     Path::Abstract a similar module. The difference is, it does not

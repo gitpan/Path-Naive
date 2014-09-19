@@ -4,7 +4,7 @@ use 5.010001;
 use strict;
 use warnings;
 
-our $VERSION = '0.02'; # VERSION
+our $VERSION = '0.03'; # VERSION
 
 use Exporter;
 our @ISA = qw(Exporter);
@@ -36,7 +36,11 @@ sub normalize_path {
                      $abs);
         push @d, $d;
     }
-    ($abs ? "/" : "") . join("/", @d);
+    if (wantarray) {
+        @d;
+    } else {
+        ($abs ? "/" : "") . join("/", @d);
+    }
 }
 
 sub is_abs_path {
@@ -83,7 +87,7 @@ __END__
 
 =pod
 
-=encoding utf-8
+=encoding UTF-8
 
 =head1 NAME
 
@@ -91,7 +95,7 @@ Path::Naive - Yet another abstract, Unix-like path manipulation routines
 
 =head1 VERSION
 
-version 0.02
+This document describes version 0.03 of Path::Naive (from Perl distribution Path-Naive), released on 2014-09-19.
 
 =head1 SYNOPSIS
 
@@ -112,17 +116,21 @@ version 0.02
  @dirs = split_path("a/b/c/..");      # -> ("a", "b", "c", "..")
 
  # normalize path (collapse . & .., remove double & trailing / except on "/")
- say normalize_path("");              # dies, empty path
- say normalize_path("/");             # -> "/"
- say normalize_path("..");            # -> ".."
- say normalize_path("./");            # -> "."
- say normalize_path("//");            # -> "/"
- say normalize_path("a/b/.");         # -> "a/b"
- say normalize_path("a/b/./");        # -> "a/b"
- say normalize_path("a/b/..");        # -> "a"
- say normalize_path("a/b/../");       # -> "a"
- say normalize_path("/a/./../b");     # -> "/b"
- say normalize_path("/a/../../b");    # -> "/b" (.. after hitting root is ok)
+ $p = normalize_path("");              # dies, empty path
+ $p = normalize_path("/");             # -> "/"
+ $p = normalize_path("..");            # -> ".."
+ $p = normalize_path("./");            # -> "."
+ $p = normalize_path("//");            # -> "/"
+ $p = normalize_path("a/b/.");         # -> "a/b"
+ $p = normalize_path("a/b/./");        # -> "a/b"
+ $p = normalize_path("a/b/..");        # -> "a"
+ $p = normalize_path("a/b/../");       # -> "a"
+ $p = normalize_path("/a/./../b");     # -> "/b"
+ $p = normalize_path("/a/../../b");    # -> "/b" (.. after hitting root is ok)
+
+ # in list context, normalize_path returns list, this is useful to save you from
+ # having to split the normalized path yourself.
+ @p = normalize_path("a/b/./");        # -> ("a", "b")
 
  # check whether path is absolute (starts from root)
  say is_abs_path("/");                # -> 1
@@ -146,27 +154,29 @@ version 0.02
  say concat_path("a/b/c", "/d/e");    # -> "/d/e" (path2 is absolute)
 
  # this is just concat_path + normalize_path the result
- say concat_path_n("a", "b");         # -> "a/b"
- say concat_path_n("a/", "b");        # -> "a/b"
- say concat_path_n("a", "b/");        # -> "a/b"
- say concat_path_n("a", "../b/");     # -> "b"
- say concat_path_n("a/b", ".././c");  # -> "a/c"
- say concat_path_n("../", ".././c/"); # -> "../../c"
+ $p = concat_path_n("a", "b");         # -> "a/b"
+ $p = concat_path_n("a/", "b");        # -> "a/b"
+ $p = concat_path_n("a", "b/");        # -> "a/b"
+ $p = concat_path_n("a", "../b/");     # -> "b"
+ $p = concat_path_n("a/b", ".././c");  # -> "a/c"
+ $p = concat_path_n("../", ".././c/"); # -> "../../c"
+ @p = concat_path_n("../", ".././c/"); # -> ("..", "..", "c")
 
  # abs_path($path, $base) is equal to concat_path_n($base, $path). $base must be
  # absolute.
- say abs_path("a", "b");              # dies, $base is not absolute
- say abs_path("a", "/b");             # -> "/b/a"
- say abs_path(".", "/b");             # -> "/b"
- say abs_path("a/c/..", "/b/");       # -> "/b/a"
- say abs_path("/a", "/b/c");          # -> "/a"
+ $p = abs_path("a", "b");              # dies, $base is not absolute
+ $p = abs_path("a", "/b");             # -> "/b/a"
+ $p = abs_path(".", "/b");             # -> "/b"
+ $p = abs_path("a/c/..", "/b/");       # -> "/b/a"
+ $p = abs_path("/a", "/b/c");          # -> "/a"
+ @p = abs_path("a/c/..", "/b/");       # -> ("b", "a")
 
 =head1 DESCRIPTION
 
 This is yet another set of routines to manipulate abstract Unix-like paths.
-C<Abstract> means not tied to actual filesystem. B<Unix-like> means single-root
+B<Abstract> means not tied to actual filesystem. B<Unix-like> means single-root
 tree, with forward slash C</> as separator, and C<.> and C<..> to mean current-
-and parent directory. C<Naive> means not having the concept of symlinks, so
+and parent directory. B<Naive> means not having the concept of symlinks, so
 paths need not be traversed on a per-directory basis (see L<File::Spec::Unix>
 where it mentions the word "naive").
 
@@ -176,19 +186,19 @@ are used: Config::Tree, L<Riap> (L<App::riap>).
 
 =head1 FUNCTIONS
 
-=head2 split_path($path) => LIST OF STR
+=head2 split_path($path) => list
 
-=head2 normalize_path($path) => STR
+=head2 normalize_path($path) => str | list
 
-=head2 is_abs_path($path) => BOOL
+=head2 is_abs_path($path) => bool
 
-=head2 is_rel_path($path) => BOOL
+=head2 is_rel_path($path) => bool
 
 =head2 concat_path($path1, $path2, ...) => STR
 
-=head2 concat_path_n($path1, $path2, ...) => STR
+=head2 concat_path_n($path1, $path2, ...) => str | list
 
-=head2 abs_path($path) => STR
+=head2 abs_path($path) => str | list
 
 =head1 SEE ALSO
 
@@ -207,8 +217,7 @@ Source repository is at L<https://github.com/sharyanto/perl-Path-Naive>.
 
 =head1 BUGS
 
-Please report any bugs or feature requests on the bugtracker website
-https://rt.cpan.org/Public/Dist/Display.html?Name=Path-Naive
+Please report any bugs or feature requests on the bugtracker website L<https://rt.cpan.org/Public/Dist/Display.html?Name=Path-Naive>
 
 When submitting a bug or request, please include a test-file or a
 patch to an existing test-file that illustrates the bug or desired
@@ -216,11 +225,11 @@ feature.
 
 =head1 AUTHOR
 
-Steven Haryanto <stevenharyanto@gmail.com>
+perlancar <perlancar@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2013 by Steven Haryanto.
+This software is copyright (c) 2014 by perlancar@cpan.org.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
